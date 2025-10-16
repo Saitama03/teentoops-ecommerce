@@ -1,5 +1,6 @@
-from .settings import *
 import os
+from .settings import *
+import dj_database_url
 
 # Production settings for TeenTops e-commerce
 
@@ -7,35 +8,49 @@ import os
 DEBUG = False
 ALLOWED_HOSTS = ['*']  # Configure with your domain
 
-# Database configuration for production
-# Uncomment and configure for PostgreSQL
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': os.environ.get('DB_NAME', 'teentops_db'),
-#         'USER': os.environ.get('DB_USER', 'teentops_user'),
-#         'PASSWORD': os.environ.get('DB_PASSWORD', ''),
-#         'HOST': os.environ.get('DB_HOST', 'localhost'),
-#         'PORT': os.environ.get('DB_PORT', '5432'),
-#     }
-# }
+# Inherit SECRET_KEY from Render environment variables
+SECRET_KEY = os.environ.get('SECRET_KEY', SECRET_KEY)
 
-# Static files configuration
-STATIC_URL = '/static/'
+# Update ALLOWED_HOSTS for Render deployment
+# Render automatically adds its internal domain to ALLOWED_HOSTS
+RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS = [RENDER_EXTERNAL_HOSTNAME]
+else:
+    ALLOWED_HOSTS = [] # Or a default for local production-like environments
+
+# Configure database for PostgreSQL on Render
+DATABASES = {
+    'default': dj_database_url.config(
+        default=os.environ.get('DATABASE_URL', 'sqlite:///db.sqlite3'),
+        conn_max_age=600
+    )
+}
+
+# Static files (CSS, JavaScript, Images)
+# https://docs.djangoproject.com/en/5.2/howto/static-files/
+
+# Add WhiteNoise to serve static files efficiently
+INSTALLED_APPS.append('whitenoise.runserver_nostatic')
+MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
+
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# Media files configuration
-MEDIA_URL = '/media/'
+# Media files (user-uploaded content)
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-# Security settings
-SECURE_BROWSER_XSS_FILTER = True
-SECURE_CONTENT_TYPE_NOSNIFF = True
-X_FRAME_OPTIONS = 'DENY'
-
 # CORS settings for production
+# Replace with your actual frontend URL when deployed
 CORS_ALLOWED_ORIGINS = [
-    "https://your-frontend-domain.com",  # Replace with your frontend domain
+    "https://your-frontend-url.vercel.app", # Replace with your deployed frontend URL
+    # Add other production frontend URLs as needed
+]
+
+# CSRF settings for production
+CSRF_TRUSTED_ORIGINS = [
+    "https://your-frontend-url.vercel.app", # Replace with your deployed frontend URL
+    # Add other production frontend URLs as needed
 ]
 
 # Email configuration (optional)

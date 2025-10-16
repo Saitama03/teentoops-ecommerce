@@ -1,0 +1,30 @@
+# render.yaml
+services:
+  # A Dockerized web service
+  - type: web
+    name: teentops-backend
+    env: python
+    buildCommand: "./quick_start.sh"
+    startCommand: "gunicorn teentops_backend.wsgi:application --bind 0.0.0.0:$PORT"
+    healthCheckPath: /
+    autoDeploy: true
+    plan: starter # You can choose a different plan (starter, standard, etc.)
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: teentops-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true # Render will generate a strong secret key for you
+      - key: WEB_CONCURRENCY
+        value: 4 # Adjust as needed based on your plan
+      - key: DJANGO_SETTINGS_MODULE
+        value: teentops_backend.production_settings # Use a separate settings file for production
+
+  # A PostgreSQL database
+  - type: postgres
+    name: teentops-db
+    plan: starter # You can choose a different plan (free, starter, etc.)
+    databaseName: teentops_db
+    user: teentops_user
+    password: # Render will generate a strong password for you
