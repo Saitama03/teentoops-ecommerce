@@ -22,7 +22,7 @@ services:
         value: teentops_backend.production_settings # Use a separate settings file for production
 
   # A PostgreSQL database
-  - type: postgres
+  - type: pserv
     name: teentops-db
     plan: starter # You can choose a different plan (free, starter, etc.)
     databaseName: teentops_db
